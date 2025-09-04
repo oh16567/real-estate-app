@@ -1,0 +1,3 @@
+// server.js 변경 예시:
+// const regionsRouterFactory = require("./routes/regions");
+// app.use("/api/regions", regionsRouterFactory(pool));

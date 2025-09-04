@@ -1,0 +1,174 @@
+
+
+
+.map-top {
+  position: sticky;
+  top: 0;
+  height: 50vh;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;          /* 오버레이가 지도 밖으로 못 나가게 */
+  margin-bottom: 12px;
+  background: #f8fafc;
+}
+
+
+
+/* 화면 전체 높이 확보(없으면 추가) */
+html, body, #root { 
+  height: 100%;
+  margin: 0;
+  overflow: hidden;   /* ★ 페이지 자체 스크롤 제거 */
+}
+
+
+
+/* 좁은 화면(모바일)에서는 자연 스크롤 */
+@media (max-width: 900px) {
+  .map-flyout {
+    left: 8px;
+    right: 8px;
+    width: auto;              /* 화면 폭에 맞게 */
+  }
+}
+
+
+
+
+/* 하단 리스트: 화면의 나머지 절반만 차지 + 스크롤 */
+.list-bottom {
+  height: calc(50vh - 12px); /* 지도(50vh) 아래 남은 공간. 위에서 map-top에 margin-bottom:12px 보정 */
+  overflow: auto;            /* ★ 리스트만 스크롤 */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 지도창 내 오버레이 루트 (지도 경계 내에서만 동작) */
+.map-overlay { position:absolute; inset:0; pointer-events:none; z-index:20; }
+.map-tab { position:absolute; top:8px; left:8px; pointer-events:auto; z-index:30; }
+
+.map-flyout-close:hover { background: rgba(0,0,0,.18); }
+
+/* 패널 내용 최소 크기 보장(너무 작게 줄어드는 것 방지) */
+.overlay-panel-body {
+  min-width: 360px;
+  min-height: 240px;
+}
+
+
+
+/* 지도창 내부 오버레이 루트 */
+.map-overlay {
+  position: absolute;
+  inset: 0;                  /* 지도 영역 전체 */
+  pointer-events: none;      /* 기본은 통과, 버튼/패널만 활성화 */
+  z-index: 20;
+}
+
+/* 좌측 상단 심플 칩(버튼) */
+.map-chip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  pointer-events: auto;      /* 클릭 가능 */
+  z-index: 30;
+}
+.chip-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 999px;      /* pill 형태 */
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.chip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+  font-size: 12px;
+}
+
+/* 작은 드롭다운 패널(지도를 가리지 않게 좌측 상단에만) */
+.map-dropdown {
+  position: absolute;
+  top: 40px;                 /* 칩 바로 아래 */
+  left: 8px;
+  width: min(360px, 90%);    /* ★ 작고 단정하게 */
+  max-height: calc(100% - 42px);
+  pointer-events: auto;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+  z-index: 25;
+}
+.dropdown-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  border-bottom: 1px solid #f1f5f9;
+}
+.dropdown-close {
+  border: 0;
+  background: rgba(0,0,0,.08);
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+/* 모바일(좁은 화면)에서는 폭을 자동 확장 */
+@media (max-width: 900px) {
+  .map-dropdown {
+    left: 8px;
+    right: 8px;
+    width: auto;
+  }
+}
+
+
+/* === Overlay 강제 오버라이드: 무조건 크게, 위에, 클릭 가능 === */
+
+
+.map-overlay {
+  position: absolute !important;
+  inset: 0 !important;                  /* 지도 영역 전체 */
+  pointer-events: none !important;      /* 기본 통과 */
+  z-index: 900 !important;              /* 지도보다 위 */
+}
+
+
+
+/* 좌측 상단 칩(버튼)은 항상 보이게 위로 */
+.map-chip, .map-tab {
+  position: absolute !important;
+  top: 8px !important;
+  left: 8px !important;
+  z-index: 1000 !important;                   /* ★ 패널보다 위로 두고 싶으면 1000 */
+  pointer-events: auto !important;
+}
+
+.panel-close:hover { background: #e5e7eb; }
+
+.overlay-panel-wrapper {
+  position: absolute;
+  top: 30px;
+  left: 8px;
+  z-index: 25;
+  pointer-events: auto;
+  height: 400px;
+}

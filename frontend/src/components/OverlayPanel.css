@@ -1,0 +1,11 @@
+.rea-infowindow {
+  max-width: 280px;
+  max-height: 200px;
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 8px;
+  word-break: break-word;
+}
+.rea-iw-title { font-weight: 700; margin-bottom: 6px; }
+.rea-iw-body { display: grid; gap: 4px; }
+.rea-iw-line { font-size: 12px; line-height: 1.35; }

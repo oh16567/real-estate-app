@@ -1,0 +1,16 @@
+.map-wrap{ position: relative; }
+.overlay-panel{
+  position:absolute; left:12px; top:12px; width:320px; max-height:80%;
+  overflow:auto; padding:12px;
+  background: rgba(255,255,255,0.3);
+  border: 1px solid #e5e7eb; border-radius:12px; backdrop-filter: blur(2px);
+  transition: background 0.2s ease;
+  z-index: 10;
+  pointer-events: auto;
+}
+.overlay-panel:hover{ background: rgba(255,255,255,0.8); }
+.overlay-panel .label{ font-weight:700; font-size:14px; }
+.tabs{ display:flex; gap:6px; margin-bottom:8px; }
+.tabs button.active{ font-weight:700; }
+.pager{ display:flex; justify-content:space-between; padding:8px 0; }
+.manage-page{ padding:12px; border:1px solid #eee; border-radius:12px; background:#fff; }

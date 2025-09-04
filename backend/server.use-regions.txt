@@ -1,0 +1,10 @@
+// --- 추가할 코드 (server.js) ------------------------------------
+// 1) 최상단 근처에 추가
+const regionsRouterFactory = require("./routes/regions");
+
+// 2) mysql pool 생성 이후, 정적 파일 서빙(express.static)과 SPA 캐치올(app.get("*")) **위쪽**에 추가
+app.use("/api/regions", regionsRouterFactory(pool));
+
+// 예시: (중요) 아래 라인은 항상 regions 라우터 **아래**에 있어야 함
+// app.use(express.static(path.join(__dirname, "../frontend/build")));
+// app.get("*", (req, res) => res.sendFile(path.join(__dirname, "../frontend/build", "index.html")));
