@@ -1,16 +1,40 @@
-.map-wrap{ position: relative; }
-.overlay-panel{
-  position:absolute; left:12px; top:12px; width:320px; max-height:80%;
-  overflow:auto; padding:12px;
-  background: rgba(255,255,255,0.3);
-  border: 1px solid #e5e7eb; border-radius:12px; backdrop-filter: blur(2px);
-  transition: background 0.2s ease;
-  z-index: 10;
-  pointer-events: auto;
+/* ===== 우측 고정 패널  투명도 제어  탭 슬라이드 ===== */
+:root {
+  --overlay-width: 420px;
+  --overlay-opacity: 1;  /* 0~1 */
+  --overlay-z: 1000;
 }
-.overlay-panel:hover{ background: rgba(255,255,255,0.8); }
-.overlay-panel .label{ font-weight:700; font-size:14px; }
-.tabs{ display:flex; gap:6px; margin-bottom:8px; }
-.tabs button.active{ font-weight:700; }
-.pager{ display:flex; justify-content:space-between; padding:8px 0; }
-.manage-page{ padding:12px; border:1px solid #eee; border-radius:12px; background:#fff; }
+.search-page{ position:relative; }         /* 패널 기준 */
+.overlay-panel{
+  position:absolute; top:0; right:0;
+  height:100%; width:var(--overlay-width);
+  background: rgba(255,255,255, var(--overlay-opacity));
+  border-left:1px solid rgba(0,0,0,.08);
+  box-shadow:-8px 0 20px rgba(0,0,0,.12);
+  display:flex; flex-direction:column;
+  transform:translateX(100%);               /* 기본 숨김 */
+  transition:transform 240ms ease;
+  z-index:var(--overlay-z);
+}
+.overlay-panel.is-open{ transform:translateX(0); }
+.overlay-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 12px; border-bottom:1px solid rgba(0,0,0,.08);
+}
+.overlay-title{ font-weight:600; font-size:15px; }
+.overlay-actions{ display:inline-flex; gap:8px; }
+.btn{ appearance:none; border:1px solid rgba(0,0,0,.15); background:#fff; padding:6px 10px; font-size:13px; border-radius:6px; cursor:pointer; }
+.btn:active{ transform:translateY(1px); }
+.tabs{ display:flex; gap:4px; padding:8px 8px 0; border-bottom:1px solid rgba(0,0,0,.08); }
+.tab{ padding:8px 10px; font-size:13px; border:1px solid transparent; border-radius:8px 8px 0 0; background:transparent; cursor:pointer; }
+.tab.is-active{ border-color:rgba(0,0,0,.12); border-bottom-color:#fff; background:#fff; }
+/* 패널 내 콘텐츠 투명도 */
+.overlay-body{
+  flex:1 1 auto; overflow:auto; padding:12px;
+  opacity:var(--overlay-opacity);
+  transition:opacity 160ms linear;
+}
+@keyframes slide-in-right { from{ transform:translateX(24px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+
+/* 조건관리 화면에서 inline 필요 시 유지 */
+.overlay-panel.inline{ position:static; width:50%; height:auto; box-shadow:none; transform:none; }

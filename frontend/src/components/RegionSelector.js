@@ -32,29 +32,40 @@ export default function RegionSelector({ value, onChange }) {
     })();
   }, []);
 
-//목록 로드 후 자동 복원(지도로 이동)
-  useEffect(() => {
-  if (!sidos.length) return;
-  const savedSido = localStorage.getItem("lastSido");
-  const savedSigungu = localStorage.getItem("lastSigungu");
-  if (savedSido) {
-    setSelSido(savedSido);
-    if (savedSigungu) {
-      setSelSigungu(savedSigungu);
-      moveToAddress(`${savedSido} ${savedSigungu}`);
-    } else {
-      moveToAddress(savedSido);
-    }
-  }
-}, [sidos]);
+// //목록 로드 후 자동 복원(지도로 이동)
+//   useEffect(() => {
+//   if (!sidos.length) return;
+//   const savedSido = localStorage.getItem("lastSido");
+//   const savedSigungu = localStorage.getItem("lastSigungu");
+//   if (savedSido) {
+//     setSelSido(savedSido);
+//     if (savedSigungu) {
+//       setSelSigungu(savedSigungu);
+//       moveToAddress(`${savedSido} ${savedSigungu}`);
+//     } else {
+//       moveToAddress(savedSido);
+//     }
+//   }
+// }, [sidos]);
 
   useEffect(() => {
     if (!selSido) { setSigungu([]); setSelSigungu(""); return; }
     (async () => {
       try {
         const data = await getJson(`${API_BASE}/api/regions/sigungu?sido=${encodeURIComponent(selSido)}`);
-        setSigungu(Array.isArray(data.items) ? data.items : []);
-        setSelSigungu("");
+        const list = Array.isArray(data.items) ? data.items : [];
+        setSigungu(list);
+
+        // 기존 선택 또는 저장된 선택 유지 로직
+        const saved = localStorage.getItem("lastSigungu") || "";
+        setSelSigungu(prev => {
+          // 1) 이전 선택이 유효하면 유지
+          if (prev && list.includes(prev)) return prev;
+          // 2) 저장된 값이 유효하면 복원
+          if (saved && list.includes(saved)) return saved;
+          // 3) 아니면 초기화
+          return "";
+        });
       } catch (e) {
         console.error("[RegionSelector] /sigungu error:", e);
         setSigungu([]);

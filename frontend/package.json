@@ -5,13 +5,18 @@
   "dependencies": {
     "ajv": "6.12.6",
     "ajv-keywords": "3.5.2",
+    "csv-parse": "^6.1.0",
+    "rc-slider": "^11.1.9",
+    "rc-tooltip": "^6.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build"
+    "build": "react-scripts build",
+    "build-and-start": "npm run build && cd ../backend && node server.js",
+    "build-and-serve": "npm run build && npx serve -s build"
   },
   "browserslist": {
     "production": [
@@ -24,5 +29,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "eslint-plugin-react-hooks": "^4.6.2"
   }
 }

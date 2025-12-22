@@ -156,70 +156,89 @@ async function fetchSigunguAll(serviceKey) {
 }
 
 // ==== Provider ====
-class RegionsProvider {
-  constructor() {
-    this.cache = null;       // { sidoList:[{code2,name}], sigunguBySido:{code2:[...]}}
-    this.expiresAt = 0;
-  }
-
-  loadFromDisk() {
-    try {
-      if (!fs.existsSync(CACHE_FILE)) return null;
-      const raw = fs.readFileSync(CACHE_FILE, "utf8");
-      const obj = JSON.parse(raw);
-      if (!Array.isArray(obj?.sidoList)) return null;
-      console.log("[regions] loaded cache from disk:",
-        "sido=", obj.sidoList.length,
-        "sggKeys=", obj.sigunguBySido ? Object.keys(obj.sigunguBySido).length : 0
-      );
-      return obj;
-    } catch {
-      return null;
-    }
-  }
-
-  saveToDisk(data) {
-    try {
-      if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
-      fs.writeFileSync(CACHE_FILE, JSON.stringify(data), "utf8");
-      console.log("[regions] saved cache to", CACHE_FILE);
-    } catch (e) {
-      console.warn("[regions] save cache fail:", e.message);
-    }
-  }
-
-  async load() {
-    const key = process.env.DATA_GO_KR_KEY;
-    console.log("[regions] boot: key?", key ? "present" : "missing");
-
-    // 0) 디스크 캐시 우선 적용 (있으면 즉시 서비스)
-    const disk = this.loadFromDisk();
-    if (disk) {
-      this.cache = disk;
+  class RegionsProvider {
+    constructor() {
+      this.cache = null;       // { sidoList:[{code2,name}], sigunguBySido:{code2:[...]}}
+      this.expiresAt = 0;
     }
 
-    // 1) 키가 있으면 네트워크 갱신 시도
-    if (key) {
+    loadFromDisk() {
       try {
-        // 1-1) 시도 먼저 (빠르게 17개 확보)
-        const { sidoList } = await fetchSidoOnly(key);
-        let data = { sidoList, sigunguBySido: this.cache?.sigunguBySido || {} };
-        this.cache = data;
-        this.saveToDisk(data);
-        console.log("[regions] (sido) loaded:", sidoList.length);
+        if (!fs.existsSync(CACHE_FILE)) return null;
+        const raw = fs.readFileSync(CACHE_FILE, "utf8");
+        const obj = JSON.parse(raw);
+        if (!Array.isArray(obj?.sidoList)) return null;
+        console.log("[regions] loaded cache from disk:",
+          "sido=", obj.sidoList.length,
+          "sggKeys=", obj.sigunguBySido ? Object.keys(obj.sigunguBySido).length : 0
+        );
+        return obj;
+      } catch {
+        return null;
+      }
+    }
 
-        // 1-2) 시군구 전량 수집 (병렬) → 완료 후 디스크 갱신
-        const { sigunguBySido } = await fetchSigunguAll(key);
-        data = { sidoList, sigunguBySido };
-        this.cache = data;
-        this.saveToDisk(data);
-        console.log("[regions] (sgg) loaded for", Object.keys(sigunguBySido).length, "sido");
-
+    saveToDisk(data) {
+      try {
+        if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
+        fs.writeFileSync(CACHE_FILE, JSON.stringify(data), "utf8");
+        console.log("[regions] saved cache to", CACHE_FILE);
       } catch (e) {
-        console.error("[regions] law API fail:", e?.message || e);
-        // 네트워크 실패 시, 디스크 캐시 있으면 그대로 유지, 없으면 폴백
-        if (!this.cache) {
-          console.warn("[regions] using fallback (Seoul/Gyeonggi/Jeju only)");
+        console.warn("[regions] save cache fail:", e.message);
+      }
+    }
+
+    deleteCache() {
+    try {
+      if (fs.existsSync(CACHE_FILE)) {
+        fs.unlinkSync(CACHE_FILE);
+        console.log("[regions] cache file deleted by API request.");
+      }
+      } catch (e) {
+        console.warn("[regions] delete cache fail:", e.message);
+        throw e; // 에러를 상위로 전달
+      }
+    }
+
+    // ★ 외부 API를 호출하여 데이터를 즉시 갱신하는 함수
+    async forceRefresh() {
+      const key = process.env.DATA_GO_KR_KEY;
+      if (!key) {
+        throw new Error("DATA_GO_KR_KEY (API Key) is not configured in .env file.");
+      }
+
+      console.log("[regions] force refresh requested.");
+      try {
+        // Sido와 Sigungu 데이터를 모두 새로 받아옵니다.
+        const { sidoList } = await fetchSidoOnly(key);
+        const { sigunguBySido } = await fetchSigunguAll(key);
+
+        const data = { sidoList, sigunguBySido };
+        this.cache = data; // 메모리 캐시 갱신
+        this.saveToDisk(data); // 디스크 캐시 갱신
+
+        console.log("[regions] force refresh completed successfully.");
+        return "Sido/Sigungu data has been updated successfully from the API.";
+      } catch (e) {
+        console.error("[regions] force refresh failed:", e.message);
+        throw new Error("Failed to fetch new data from the API.");
+      }
+    }
+
+    async load() {
+      const key = process.env.DATA_GO_KR_KEY;
+      console.log("[regions] boot: loading from cache or fallback.");
+    
+
+      // ★ 서버 시작 시에는 디스크 캐시만 읽도록 로직을 단순화합니다.
+      const disk = this.loadFromDisk();
+      if (disk) {
+        this.cache = disk;
+      }
+
+      // ★ 캐시가 없을 경우에만 비상용 데이터를 사용합니다.
+      if (!this.cache) {
+          console.warn("[regions] no cache file; fallback used");
           this.cache = {
             sidoList: [
               { code2:"11", name:"서울특별시" },
@@ -233,29 +252,11 @@ class RegionsProvider {
             }
           };
         }
+         const hours = Number(process.env.REGIONS_REFRESH_HOURS || 24);
+         this.expiresAt = Date.now() + hours * 3600 * 1000;
       }
-    } else {
-      // 키가 없으면 디스크 캐시 → 없으면 폴백
-      if (!this.cache) {
-        console.warn("[regions] no DATA_GO_KR_KEY; fallback used");
-        this.cache = {
-          sidoList: [
-            { code2:"11", name:"서울특별시" },
-            { code2:"41", name:"경기도" },
-            { code2:"49", name:"제주특별자치도" },
-          ],
-          sigunguBySido: {
-            "11": ["종로구","중구","용산구","성동구","광진구","동대문구","중랑구","성북구","강북구","도봉구","노원구","은평구","서대문구","마포구","양천구","강서구","구로구","금천구","영등포구","동작구","관악구","서초구","강남구","송파구","강동구"],
-            "41": ["수원시","고양시","용인시","성남시","부천시","안산시","안양시","의정부시","파주시","광명시","군포시","과천시","여주시","화성시","김포시","시흥시","오산시","광주시","이천시","평택시","하남시","포천시","연천군","양주시","의왕시","동두천시","양평군","안성시","가평군","남양주시"],
-            "49": ["제주시","서귀포시"],
-          }
-        };
-      }
-    }
 
-    const hours = Number(process.env.REGIONS_REFRESH_HOURS || 24);
-    this.expiresAt = Date.now() + hours * 3600 * 1000;
-  }
+
 
   async ensure() {
     if (!this.cache || Date.now() > this.expiresAt) {

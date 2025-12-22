@@ -4,7 +4,7 @@
 .map-top {
   position: sticky;
   top: 0;
-  height: 50vh;
+  height: 30vh;
   border: 1px solid #eee;
   border-radius: 8px;
   overflow: hidden;          /* 오버레이가 지도 밖으로 못 나가게 */
@@ -25,11 +25,31 @@ html, body, #root {
 
 /* 좁은 화면(모바일)에서는 자연 스크롤 */
 @media (max-width: 900px) {
+  html, body, #root {
+    height: auto;
+    overflow: auto;              /* 모바일에서 전체 스크롤 허용 */
+  }
+
   .map-flyout {
     left: 8px;
     right: 8px;
     width: auto;              /* 화면 폭에 맞게 */
   }
+
+  .map-top { height: 40vh; }   /* 상단 지도 살짝 낮춤 */
+  .list-bottom { height: calc(60vh - 12px); }  /* 리스트 영역 확보 */
+  .overlay-panel-body {
+    min-width: unset;
+    width: 100%;
+  }
+  .map-dropdown { width: min(96vw, 360px); }
+  /* 목록 카드 단일열 정렬 */
+  .property-list .summary { flex-direction: column; gap: 8px; }
+  .property-list .summary .left-col,
+  .property-list .summary .right-col { flex: 1 1 auto; min-width: 0; }
+  /* 터치 여백 확대 */
+  .chip-button, .dropdown-close, .panel-close { padding: 8px 14px; }
+
 }
 
 
@@ -164,11 +184,338 @@ html, body, #root {
 
 .panel-close:hover { background: #e5e7eb; }
 
-.overlay-panel-wrapper {
-  position: absolute;
-  top: 30px;
-  left: 8px;
-  z-index: 25;
-  pointer-events: auto;
-  height: 400px;
+.overlay-panel-wrapper { 
+  position:absolute; 
+  top:30px; left:8px; 
+  z-index:25; 
+  pointer-events:auto; 
+  height:auto; 
+  max-height: calc(100% - 40px); 
 }
+
+/* PropertyList styles */
+.list-row { border-bottom: 1px solid #eee; }
+.summary { display:flex; gap:12px; padding:10px 12px; cursor:pointer; }
+.details { max-height: 0; overflow: hidden; transition: max-height 220ms ease; }
+.details.expand { max-height: 600px; }
+
+.detail-section { padding: 10px 12px; }
+.detail-title { font-weight: 600; margin: 6px 0; }
+
+.frow { display:flex; gap:10px; padding:3px 0; }
+.flabel { flex:0 0 110px; color:#666; }
+.fval { flex:1; }
+
+.left-col { flex:0 0 32%; display:flex; flex-direction:column; gap:6px; }
+.right-col { flex:1; display:flex; flex-direction:column; gap:4px; }
+
+.list { width: 100%; }
+.title { font-weight: 600; font-size: 15px; }
+.price { color: #333; font-size: 14px; }
+.empty { padding: 12px; color: #666; }
+
+
+.property-list .list-row{border-bottom:1px solid #eee;}
+.property-list .summary{display:flex;gap:12px;padding:10px 12px;cursor:pointer;}
+.property-list .details{max-height:0;overflow:hidden;transition:max-height .22s ease;}
+.property-list .details.expand{max-height:600px;}
+
+/* 상태 색상 */
+.list-row.not-contract { background: #f3f4f6; } /* 계약가능 아님 → 회색 */
+.list-row.selected { background: #fff4cc; }     /* 선택됨 → 연노랑 */
+.list-row.not-contract.selected { background: #fff4cc; } /* 선택 우선 */
+
+
+/* PropertyList 레이아웃 안정화 */
+.list-row > .summary{display:flex;align-items:flex-start;gap:12px}
+.list-row > .summary > .left-col{flex:0 0 65%;min-width:0}
+.list-row > .summary > .right-col{ font-size: 12px; line-height: 1.35;flex:1 1 65%;min-width:0;display:flex;flex-direction:column;gap:4px }
+/* 자식들도 상속 */
+.list-row > .summary > .right-col > * { font-size: inherit; }
+
+/* 주소 라인 스타일 */
+.addr{ color:#666; font-size:12px; line-height:1.3;
+       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+
+.property-list .list-row > .summary > .right-col { font-size: 12px; line-height: 1.35; }
+.property-list .list-row > .summary > .right-col > * { font-size: inherit; }
+
+/* 상세보기 폰트 축소 */
+.list-row .details { font-size: 12px; line-height: 1.35; }
+.list-row .details .detail-section { font-size: inherit; }
+.list-row .details .detail-title { font-size: inherit; font-weight: 600; }
+.list-row .details .frow,
+.list-row .details .flabel,
+.list-row .details .fval { font-size: inherit; }
+
+/* 상세 2열 레이아웃 */
+.list-row .detail-grid{display:flex;gap:12px}
+.list-row .detail-grid .d-left{flex:0 0 50%;min-width:0}
+.list-row .detail-grid .d-right{flex:1 1 50%;min-width:0}
+
+/* 상세 폰트 축소 유지 */
+.list-row .details{font-size:12px;line-height:1.35}
+
+/* 단일 행 출력: {label} {value} */
+.frow { padding: 2px 0; }
+
+/* 상세 2열 */
+.list-row .detail-grid{display:flex;gap:12px}
+.list-row .detail-grid .d-left{flex:0 0 50%;min-width:0}
+.list-row .detail-grid .d-right{flex:1 1 50%;min-width:0}
+.list-row .detail-title{font-weight:600;margin:4px 0 6px 0}
+
+/* 우측/상세 폰트 축소 유지(이미 있으면 값만 조정) */
+.list-row .details{font-size:12px;line-height:1.35}
+
+
+/* 공통 폭 변수 */
+.property-list { --pl-left: 65%; }
+
+/* summary 좌우 */
+.property-list .list-row > .summary { display:flex; gap:12px; align-items:flex-start; }
+.property-list .list-row > .summary > .left-col  {
+  width: 120px;               /* 고정폭 */
+  flex-shrink: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;        /* 줄바꿈 허용 */
+}
+.property-list .list-row > .summary > .right-col {
+  flex: 1;
+  text-align: left;
+  margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* details 좌우(요청: d-left를 summary의 left-col과 동일 폭) */
+.property-list .list-row .detail-grid { display:flex; gap:12px; }
+.property-list .list-row .detail-grid .d-left  { flex: 0 0 var(--pl-left); min-width:0; }
+.property-list .list-row .detail-grid .d-right { flex: 1 1 calc(100% - var(--pl-left)); min-width:0; }
+
+/* === OVERRIDE: summary 좌우 레이아웃 고정폭(left)  줄바꿈, 우측은 좌측에 붙여 정렬 === */
+.property-list .list-row > .summary { align-items: flex-start; }
+.property-list .list-row > .summary > .left-col {
+  width: 300px !important;           /* 고정폭 */
+  flex: 0 0 300px !important;        /* 폭 고정 */
+  min-width: 300px !important;
+  white-space: normal !important;    /* 줄바꿈 허용 */
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+.property-list .list-row > .summary > .right-col {
+  flex: 1 1 auto !important;
+  margin-left: 8px !important;
+  text-align: left !important;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 모바일에서도 가로 배치 유지하고 좌측 고정폭 */
+@media (max-width: 900px) {
+  .property-list .list-row > .summary { flex-direction: row !important; }
+  .property-list .list-row > .summary > .left-col {
+    width: 120px !important;
+    flex: 0 0 120px !important;
+    min-width: 120px !important;
+  }
+}
+
+/* 의뢰인 다중 라인 들여쓰기 */
+.frow-sub { padding-left: 12px; }
+
+.frow a{ text-decoration: underline; }
+
+/* 수정일 메타 */
+.meta{ color:#888; font-size:11px; line-height:1.3; margin-top:2px }
+
+.btn-clear{
+  margin-left:6px; padding:4px 8px; font-size:12px; line-height:1.2;
+  border:1px solid #ccc; background:#f8f8f8; border-radius:4px; cursor:pointer;
+}
+.btn-clear:hover{ background:#f0f0f0; }
+
+.print-modal{ z-index: 5000 !important; }
+
+/* === Pager: 소재지 검색 === */
+.pager { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.pager-left { display:flex; align-items:center; gap:8px; }
+.pager-right { display:flex; align-items:center; gap:8px; }
+.pager-right .loc-search-wrap{ display:flex; align-items:center; }
+.pager-right .loc-search{
+  width:500px;
+  box-sizing:border-box;
+  padding:6px 10px;
+  border:1px solid #d1d5db;
+  border-radius:6px;
+  font-size:13px;
+}
+@media (max-width:900px){
+  .pager { flex-wrap:wrap; }
+  .pager-right .loc-search{ width:100%; }
+}
+
+/* 임대현황 카드 */
+.rent-status-card { border:1px solid #ddd; border-radius:12px; padding:12px; background:#fff; }
+.rent-status-header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.rent-status-header .right { display:flex; align-items:center; gap:8px; font-size:14px; }
+.rent-status-header .dot { opacity:.5; }
+.owner-badge { margin-left:8px; padding:2px 8px; border:1px solid #bbb; border-radius:999px; font-size:12px; }
+
+.rent-status-actions { margin:8px 0; }
+.btn { padding:6px 10px; border:1px solid #ccc; border-radius:8px; background:#f8f8f8; cursor:pointer; }
+.btn:hover { background:#f1f1f1; }
+.btn.danger { border-color:#e57373; }
+
+.rent-status-tablewrap { max-height:360px; overflow:auto; border-top:1px solid #eee; }
+.rent-status-table { width:100%; border-collapse:collapse; }
+.rent-status-table th, .rent-status-table td { border-bottom:1px solid #eee; padding:6px 8px; font-size:14px; }
+.rent-status-table th { position:sticky; top:0; background:#fafafa; z-index:1; }
+.rent-status-table td input { width:100%; box-sizing:border-box; padding:4px 6px; }
+.rent-status-table .narrow { width:64px; text-align:center; }
+.rent-status-table .empty { text-align:center; color:#888; }
+
+/* 인쇄 전용: thead 반복, 스크롤 해제, 이어서 출력 문구 */
+@media print {
+  .rent-status-card { break-inside: avoid; }
+  .rent-status-tablewrap { max-height: none; overflow: visible; }
+  .rent-status-table thead { display: table-header-group; }
+}
+
+/* 인쇄 시 수정버튼 제거 */
+@media print {
+  .rent-status-actions { display: none !important; }
+}
+
+/* 인쇄 전용/화면 전용 토글 */
+.screen-only { display: block; }
+.print-only { display: none; }
+@media print {
+  .screen-only { display: none !important; }
+  .print-only  { display: block !important; }
+}
+
+/* 이어서 출력 컨테이너는 항상 새 페이지 시작 */
+@media print {
+  .rent-continue-page { page-break-before: always; }
+  .rent-continue-page table thead { display: table-header-group; }
+  .rent-continue-page table tfoot { display: table-footer-group; }
+}
+
+/* 인쇄 시 수정버튼 숨김 */
+@media print { .rent-status-actions { display:none !important; } }
+
+/* 인쇄 시 thead 반복 + sticky 비활성화 */
+@media print {
+  .rent-status-table thead { display: table-header-group; }
+  .rent-status-table th { position: static !important; } /* sticky 제거 */
+}
+
+/* 이어서 출력은 새 페이지에서 시작 */
+@media print {
+  .rent-continue-page { page-break-before: always; margin-top: 8mm; }
+}
+
+/* 공급자 정보는 첫 장에 남기기: 강제 분리 금지 */
+@media print {
+  .supplier-block {
+    page-break-before: avoid;
+    page-break-after: avoid;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+/* 기타 월비용 레이어 */
+.kv-monthcost { position: relative; }
+.misc-layer {
+  position: absolute; top: 100%; left: 0;
+  margin-top: 6px; z-index: 1000;
+  background: #fff; border: 1px solid #ccc; border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+  padding: 10px;
+  display: grid; grid-template-columns: 90px 1fr; gap: 8px 10px;
+  width: 340px; max-width: 90vw; box-sizing: border-box; overflow: hidden;
+}
+.misc-layer label { font-size: 12px; color: #555; align-self: center; }
+.misc-layer input[type="text"],
+.misc-layer input[type="number"]{
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd; border-radius: 6px;
+  box-sizing: border-box;
+}
+.misc-layer input[type="number"]{ text-align: right; }
+.misc-edit { cursor: pointer; border-bottom: 1px dashed #999; }
+@media print { .misc-layer { display: none !important; } }
+
+.gdrive-actions{ display:flex; gap:8px; margin-bottom:8px; }
+.gdrive-actions .btn-upload{ display:inline-block; padding:6px 10px; border:1px solid #ccc; border-radius:6px; cursor:pointer; }
+.gdrive-grid{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:8px; }
+.gdrive-photo{ display:block; border:1px solid #e5e7eb; border-radius:8px; padding:6px; text-decoration:none; color:#111; }
+.gdrive-photo img{ width:100%; height:120px; object-fit:cover; border-radius:6px; }
+.gdrive-photo .name{ display:block; font-size:12px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+@media print{ .gdrive-actions{ display:none !important; } }
+
+
+/* === 결과 행: 모두 좌측으로, 한 줄 밀착 === */
+.result-row{ display:flex !important; flex-direction:row !important; align-items:center !important; justify-content:flex-start !important; gap:0 !important; flex-wrap:nowrap !important; }
+.result-row > *{ margin:0 !important; }
+.result-row .pager{ display:inline-flex !important; align-items:center !important; gap:8px !important; white-space:nowrap !important; margin:0 !important; }
+.result-row .pager-right{ flex:0 0 auto !important; margin-left:8px !important; }
+.result-row .unit-converter{ display:inline-flex !important; align-items:center !important; gap:6px !important; margin-left:8px !important; white-space:nowrap !important; }
+
+/* result-row 내부 요소를 왼쪽부터 순차적으로 붙이기 */
+.result-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;              /* 요소 사이 간격 제거 */
+  text-align: left !important;
+}
+
+.result-row > * {
+  margin: 0 !important;
+  text-align: left !important;
+}
+
+/* === 결과 행: 모두 좌측으로 한 줄에 밀착 === */
+.result-row{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:0 !important;
+  flex-wrap:nowrap !important;
+  text-align:left !important;
+}
+.result-row > *{ margin:0 !important; }
+.result-row .pager{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:8px !important;
+  white-space:nowrap !important;
+  margin:0 !important;
+}
+.result-row .pager-right{ flex:0 0 auto !important; margin-left:8px !important; }
+.result-row .pager span{ white-space:nowrap !important; }
+.result-row .unit-converter{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  margin-left:40px !important;
+  white-space:nowrap !important;
+}
+
+/* 리스트 최상단 이동 시 하이라이트 */
+.list-row.highlight { background: #fffbe6; }   /* 연노랑 */
+.list-row + .list-row { border-top: 1px solid #eee; } /* 구분선 */
+.summary .meta { font-size: 12px; color: #666; }
+.right-mini .meta { font-size: 13px; color: #333; }
+
+/* 전역 CSS에 추가 */
+.list.property-list { overflow: visible; }
